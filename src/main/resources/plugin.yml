@@ -1,0 +1,18 @@
+name: WorldEvents
+version: '${version}'
+main: dev.arc2.worldevents.WorldEventsPlugin
+api-version: '1.21'
+description: Arc 2 World Events — 15 SMP events with a roulette announcement, auctions, a maze and more.
+authors: [Arc2]
+load: POSTWORLD
+
+permissions:
+  worldevents.admin:
+    description: Start/stop events, open the duration GUI, run auctions, manage balances.
+    default: op
+  worldevents.sacrifice:
+    description: Use /sacrifice to turn items into auction money.
+    default: true
+  worldevents.bypass:
+    description: Not affected by world events (no effects, not teleported into the maze, can't be hunted).
+    default: false

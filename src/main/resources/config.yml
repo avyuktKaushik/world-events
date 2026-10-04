@@ -1,0 +1,469 @@
+# ==================================================================================
+#   WorldEvents — Arc 2              (Paper 1.21.11)
+#
+#   All text supports MiniMessage: https://docs.advntr.dev/minimessage/format.html
+#   Durations can also be changed in game with /worldevent gui
+#   After editing this file run /worldevent reload
+# ==================================================================================
+
+settings:
+  # How many world events may run at the same time (0 = unlimited).
+  max-concurrent-events: 1
+
+  # Events in the same group can never run together.
+  conflicts:
+    - [vulnerable, tanky]
+    - [auction, smartie_pants]
+    - [twists_and_turns, the_hunted]
+    - [twists_and_turns, loot_rain]
+    - [twists_and_turns, boss]
+
+  # The "WORLD EVENT" announcement where names flash before landing on the event.
+  roulette:
+    enabled: true
+    spins: 30
+    title: "<gradient:#ff4e50:#f9d423><bold>WORLD EVENT</bold></gradient>"
+    title-flash: "<gradient:#f9d423:#ff4e50><bold>WORLD EVENT</bold></gradient>"
+    start-sound: "minecraft:block.beacon.activate"
+    click-sound: "minecraft:ui.button.click"
+    land-sound: "minecraft:ui.toast.challenge_complete"
+
+  # Boss bar with name + timer for every running event.
+  bossbar: true
+
+  # Participation rewards: a player must be ACTIVE (not AFK) for this % of the event to get a roll.
+  # (stops alts / AFK players from logging in at the end to farm the jackpot)
+  participation:
+    min-percent: 50
+    afk-seconds: 180
+
+  # Give participation rewards when an admin stops an event early?
+  rewards-on-admin-stop: false
+
+  # Random coordinates used by Boss Event and Loot Rain.
+  random-region:
+    world: world
+    min-x: 1
+    max-x: 6000
+    min-z: 1
+    max-z: 6000
+
+# Start a random world event automatically every X–Y minutes (off by default — the admin decides).
+auto-events:
+  enabled: false
+  min-players: 3
+  min-interval-minutes: 120
+  max-interval-minutes: 240
+
+# ----------------------------------------------------------------------------------
+#  REWARDS
+#  Item entry format (used everywhere):
+#    {material: GOLDEN_APPLE, amount: "8-16", weight: 10}
+#    {material: DIAMOND_SWORD, enchants: {sharpness: 4, unbreaking: 3}, name: "<aqua>Blade"}
+#    {material: SPLASH_POTION, potion: strong_healing, amount: 4}
+#    {special: ARMOR_SHULKER}     shulker box full of Prot III / Unb III / Mending diamond armor
+#    {special: ARMOR_SET}         full Prot III / Unb III / Mending diamond set
+#    {special: ARMOR_PIECE}       one random piece of that armor
+#    {special: "POTION_SHULKER:strong_strength:POTION"}
+#    {special: OP_VILLAGER}
+#  SAFETY: every reward is filtered — netherite is removed and Protection is capped at III.
+# ----------------------------------------------------------------------------------
+rewards:
+  max-protection-level: 3
+  jackpot:
+    name: "<gradient:#00c6ff:#0072ff><bold>Arc 2 Armory</bold></gradient>"
+    shulker-color: CYAN_SHULKER_BOX
+    items:
+      - {special: ARMOR_SHULKER}
+  participation:
+    # Chance (0-1) for each active participant to win the jackpot. Per-event override: events.<id>.reward-chance
+    default-jackpot-chance: 0.20
+    announce-jackpots: true
+    # Everyone who misses the jackpot gets ONE of these (weighted). Use [] to disable.
+    consolation:
+      - {material: GOLDEN_APPLE, amount: "4-8", weight: 45}
+      - {material: EXPERIENCE_BOTTLE, amount: "16-32", weight: 25}
+      - {material: DIAMOND, amount: "3-6", weight: 15}
+      - {material: ENDER_PEARL, amount: "4-8", weight: 10}
+      - {material: ENCHANTED_GOLDEN_APPLE, amount: 1, weight: 5}
+
+# ----------------------------------------------------------------------------------
+#  EVENTS
+#  Every event has:  enabled (in the random pool), weight (random chance), duration-minutes,
+#                    reward-chance (jackpot chance), display-name / description (optional overrides)
+# ----------------------------------------------------------------------------------
+events:
+  vulnerable:
+    enabled: true
+    weight: 10
+    duration-minutes: 30
+    reward-chance: 0.20
+    hearts: 7
+
+  rags_to_riches:
+    enabled: true
+    weight: 10
+    duration-minutes: 30
+    reward-chance: 0.20
+    level: 255
+
+  glow_and_behold:
+    enabled: true
+    weight: 10
+    duration-minutes: 30
+    reward-chance: 0.20
+    bossbar-color: YELLOW
+
+  locator_bar:
+    enabled: true
+    weight: 10
+    duration-minutes: 30
+    reward-chance: 0.20
+    bossbar-color: BLUE
+    # only used if the gamerule can't be found through the API
+    gamerule-name: locator_bar
+    fallback-previous-value: false
+
+  loot_rain:
+    enabled: true
+    weight: 8
+    duration-minutes: 6
+    reward-chance: 0.20
+    bossbar-color: YELLOW
+    countdown-seconds: 90
+    radius: 12
+    drop-height: 25
+    wave-interval-seconds: 5
+    items-per-wave: "4-7"
+    loot:
+      - {material: GOLDEN_APPLE, amount: "2-6", weight: 30}
+      - {material: DIAMOND, amount: "1-4", weight: 20}
+      - {material: EXPERIENCE_BOTTLE, amount: "8-16", weight: 18}
+      - {material: ENDER_PEARL, amount: "2-4", weight: 12}
+      - {material: SPLASH_POTION, potion: strong_healing, amount: "2-3", weight: 10}
+      - {material: POTION, potion: strong_strength, amount: 1, weight: 8}
+      - {special: ARMOR_PIECE, weight: 6}
+      - {material: TOTEM_OF_UNDYING, amount: 1, weight: 2}
+      - {material: ENCHANTED_GOLDEN_APPLE, amount: 1, weight: 2}
+
+  the_hunted:
+    enabled: true
+    weight: 8
+    duration-minutes: 30
+    reward-chance: 0.20
+    bossbar-color: RED
+    hearts: 16
+    min-players: 2
+    coords-broadcast-seconds: 60
+    # if the hunted stays offline longer than this they forfeit
+    offline-grace-minutes: 5
+    # the bounty can't be claimed in the first X seconds (stops instant "arranged" kills)
+    min-hunt-seconds: 60
+    block-same-ip-kills: true
+    buffs: ["strength:0", "resistance:0", "speed:0"]
+    killer-rewards:
+      - {material: ENCHANTED_GOLDEN_APPLE, amount: 2}
+      - {material: GOLDEN_APPLE, amount: 128}
+      - {special: ARMOR_SET}
+    killer-jackpot-chance: 0.20
+    survivor-rewards:
+      - {material: ENCHANTED_GOLDEN_APPLE, amount: 1}
+      - {material: GOLDEN_APPLE, amount: 64}
+
+  looting_3000:
+    enabled: true
+    weight: 8
+    duration-minutes: 30
+    reward-chance: 0.20
+    bossbar-color: PINK
+    multiplier: 4
+    # all *_ORE blocks are included automatically. Only NATURAL ore is multiplied —
+    # ore placed by players (ever) or moved by pistons drops normally. Silk touch is never multiplied.
+    extra-ores: []
+    excluded-ores: []
+    multiply-mob-drops: true
+    mob-drop-blacklist: [TOTEM_OF_UNDYING, NETHER_STAR, WITHER_SKELETON_SKULL, ELYTRA, DRAGON_EGG, SHULKER_SHELL, TRIDENT, HEAVY_CORE, ENCHANTED_GOLDEN_APPLE]
+    excluded-spawn-reasons: [SPAWNER, SPAWNER_EGG, BREEDING, DISPENSE_EGG, EGG, SLIME_SPLIT, BUILD_IRONGOLEM, VILLAGE_DEFENSE, VILLAGE_INVASION, BUILD_SNOWMAN, BUILD_WITHER, CUSTOM, COMMAND, DUPLICATION, OMINOUS_ITEM_SPAWNER, BUCKET, PIGLIN_ZOMBIFIED, CURED, INFECTION, DROWNED, FROZEN, METAMORPHOSIS, SHEARED, LIGHTNING]
+
+  short_reach:
+    enabled: true
+    weight: 10
+    duration-minutes: 30
+    reward-chance: 0.20
+    bossbar-color: WHITE
+    entity-reach: 1.5
+    block-reach: 3.0
+    hit-tolerance: 0.6
+
+  boss:
+    enabled: true
+    weight: 6
+    duration-minutes: 30
+    reward-chance: 0.20
+    bossbar-color: PURPLE
+    reminder-minutes: 5
+
+  money_grows_on_trees:
+    enabled: true
+    weight: 8
+    duration-minutes: 30
+    reward-chance: 0.20
+    bossbar-color: YELLOW
+    drop-chance: 0.45
+    # max golden apples one player can get from leaves per event (0 = no limit)
+    max-per-player: 64
+
+  auction:
+    enabled: true
+    weight: 6
+    # duration = the SACRIFICE window before the bidding starts
+    duration-minutes: 5
+    reward-chance: 0.20
+    bossbar-color: YELLOW
+
+  smartie_pants:
+    enabled: true
+    weight: 8
+    # questions are spread out over this time
+    duration-minutes: 10
+    reward-chance: 0.20
+    bossbar-color: BLUE
+    questions: 5
+    answer-seconds: 60
+    max-guesses: 3
+    guess-cooldown-seconds: 2
+    winner-rewards:
+      - {material: GOLDEN_APPLE, amount: 20}
+    winner-jackpot-chance: 0.20
+
+  twists_and_turns:
+    enabled: true
+    weight: 6
+    duration-minutes: 10
+    reward-chance: 0.20
+    bossbar-color: GREEN
+    # The maze is generated here (corner) and fully cleared afterwards. Pick an EMPTY area!
+    # Set it in game with /worldevent maze setorigin
+    world: world
+    origin: {x: 10000, y: 290, z: 10000}
+    cells: 15            # maze is cells x cells
+    path-width: 2
+    wall-height: 3
+    extra-openings: 0.06 # small loops so it isn't one long corridor
+    floor-material: BEDROCK
+    wall-material: BEDROCK
+    ceiling-material: BARRIER
+    exit-material: EMERALD_BLOCK
+    chest-chance: 0.7    # chance for a loot chest in each dead end
+    rolls-per-chest: "3-5"
+    allow-pvp: false
+    respawn-in-maze: true
+    keep-inventory-on-death: true
+    allowed-commands: [msg, tell, w, r, reply, me]
+    chest-loot:
+      - {material: GOLDEN_APPLE, amount: "3-8", weight: 30}
+      - {material: DIAMOND, amount: "2-5", weight: 18}
+      - {material: EXPERIENCE_BOTTLE, amount: "8-24", weight: 16}
+      - {material: ENDER_PEARL, amount: "2-6", weight: 12}
+      - {material: SPLASH_POTION, potion: strong_healing, amount: "2-4", weight: 10}
+      - {material: POTION, potion: strong_strength, amount: "1-2", weight: 8}
+      - {material: POTION, potion: strong_swiftness, amount: "1-2", weight: 6}
+      - {special: ARMOR_PIECE, weight: 6}
+      - {material: DIAMOND_SWORD, enchants: {sharpness: 4, unbreaking: 3}, weight: 3}
+      - {material: TOTEM_OF_UNDYING, amount: 1, weight: 2}
+      - {material: ENCHANTED_GOLDEN_APPLE, amount: 1, weight: 2}
+    winner-rewards:
+      - {material: ENCHANTED_GOLDEN_APPLE, amount: 2}
+      - {material: GOLDEN_APPLE, amount: 32}
+      - {special: ARMOR_SET}
+    winner-jackpot-chance: 0.35
+    finisher-rewards:
+      - {material: GOLDEN_APPLE, amount: 8}
+
+  tanky:
+    enabled: true
+    weight: 10
+    duration-minutes: 30
+    reward-chance: 0.20
+    hearts: 20
+    heal-on-start: true
+
+  unfortunate:
+    enabled: true
+    weight: 10
+    duration-minutes: 30
+    reward-chance: 0.20
+    bossbar-color: PURPLE
+    fail-chance: 0.30
+    affect-gaps: true
+    affect-potions: true
+    affect-shields: true
+    affect-attacks: true
+    shield-fail-cooldown-ticks: 20
+    fail-sound: "minecraft:entity.item.break"
+    fail-sound-2: "minecraft:block.note_block.bass"
+
+# ----------------------------------------------------------------------------------
+#  AUCTION
+# ----------------------------------------------------------------------------------
+auction:
+  lots-per-auction: 3
+  bid-seconds: 45
+  # a bid in the last X seconds resets the timer to X seconds
+  anti-snipe-seconds: 10
+  # each bid must beat the top bid by at least max(min-increment, top * min-increment-percent%)
+  min-increment: 1
+  min-increment-percent: 5
+
+  # Starting prices go UP when the richest online players have a lot of money (top-3 average).
+  # multiplier = 1 + (richness / reference-balance - 1) * strength, clamped to [1, max-multiplier]
+  starting-price-scaling:
+    enabled: true
+    reference-balance: 200
+    strength: 0.5
+    max-multiplier: 2.5
+
+  # 1-2 auctions per day: one random time inside each window (window-chances = chance it happens).
+  auto:
+    enabled: true
+    timezone: ""          # e.g. "Asia/Dubai" — empty = server time
+    min-players: 3
+    roulette: true
+    windows: ["15:00-17:00", "20:00-22:00"]
+    window-chances: [1.0, 0.6]
+
+  op-villager:
+    name: "<gradient:#ffd700:#ff8c00><bold>OP Villager</bold></gradient>"
+    emerald-price: 1
+
+  # What can come up for auction. Items are only ANNOUNCED — an admin gives them out
+  # (you get a message + auction-winners.log), except the OP Villager which the plugin gives.
+  # price-per-unit × amount = starting price (before scaling).
+  lot-pool:
+    warden_heart:
+      name: "<dark_aqua><bold>Warden Heart</bold></dark_aqua>"
+      amount: "1-4"
+      price-per-unit: 35
+      weight: 12
+      delivery: ANNOUNCE
+    weapon_handle:
+      name: "<gold><bold>Weapon Handle</bold></gold>"
+      amount: "1-2"
+      price-per-unit: 50
+      weight: 10
+      delivery: ANNOUNCE
+    enchanted_golden_apples:
+      name: "<light_purple>Enchanted Golden Apple</light_purple>"
+      amount: "1-4"
+      price-per-unit: 12
+      weight: 14
+      delivery: ANNOUNCE
+    armor_shulker:
+      name: "<aqua>Shulker Box of Prot III Diamond Armor Sets</aqua>"
+      amount: "1-2"
+      price-per-unit: 90
+      weight: 8
+      delivery: ANNOUNCE
+    strength_shulker:
+      name: "<red>Shulker Box of Strength II Potions</red>"
+      amount: 1
+      price-per-unit: 35
+      weight: 7
+      delivery: ANNOUNCE
+    healing_shulker:
+      name: "<light_purple>Shulker Box of Instant Health II Potions</light_purple>"
+      amount: 1
+      price-per-unit: 30
+      weight: 7
+      delivery: ANNOUNCE
+    speed_shulker:
+      name: "<aqua>Shulker Box of Speed II Potions</aqua>"
+      amount: 1
+      price-per-unit: 22
+      weight: 6
+      delivery: ANNOUNCE
+    fire_res_shulker:
+      name: "<gold>Shulker Box of Fire Resistance Potions</gold>"
+      amount: 1
+      price-per-unit: 20
+      weight: 6
+      delivery: ANNOUNCE
+    golden_apples:
+      name: "<gold>Golden Apples</gold>"
+      amount: "64-256"
+      amount-step: 64
+      price-per-unit: 0.25     # 64 = $16 start (they're worth ~$20/stack when sacrificed)
+      weight: 14
+      delivery: ANNOUNCE
+    op_villager:
+      name: "<gradient:#ffd700:#ff8c00><bold>OP Villager</bold></gradient>"
+      description: "Librarian: Prot III, Mending, Unbreaking III, Sharpness V — 1 emerald each"
+      amount: 1
+      price-per-unit: 150
+      weight: 4
+      delivery: OP_VILLAGER
+
+  # /sacrifice — turns items into auction money
+  sacrifice:
+    # allow /sacrifice at any time (false = only during the auction event / a running auction)
+    anytime: true
+    # Flat value per item. Only NON-farmable items are listed on purpose — anything an
+    # iron/gold/raid/enderman farm or a villager trading hall can mass-produce would let
+    # players print money. Golden apples are priced as requested ($20 per stack).
+    values:
+      GOLDEN_APPLE: 0.3125          # $20 per stack
+      ENCHANTED_GOLDEN_APPLE: 8
+      DIAMOND: 0.6
+      DIAMOND_BLOCK: 5.4
+      NETHERITE_SCRAP: 3
+      NETHERITE_INGOT: 12
+      ANCIENT_DEBRIS: 3
+      TOTEM_OF_UNDYING: 2
+      NETHER_STAR: 10
+      ELYTRA: 20
+      HEAVY_CORE: 8
+    # tools / armor: base value + enchant values, capped at gear-max-value, scaled by durability left
+    gear-base:
+      DIAMOND_HELMET: 1
+      DIAMOND_CHESTPLATE: 1
+      DIAMOND_LEGGINGS: 1
+      DIAMOND_BOOTS: 1
+      DIAMOND_SWORD: 1
+      DIAMOND_AXE: 1
+      DIAMOND_PICKAXE: 1
+      DIAMOND_SHOVEL: 0.5
+      NETHERITE_HELMET: 3
+      NETHERITE_CHESTPLATE: 3
+      NETHERITE_LEGGINGS: 3
+      NETHERITE_BOOTS: 3
+      NETHERITE_SWORD: 3
+      NETHERITE_AXE: 3
+      NETHERITE_PICKAXE: 3
+      MACE: 4
+    gear-max-value: 8
+    # Enchanted books are farmable from librarians, so they're worth nothing by default.
+    allow-enchanted-books: false
+    enchanted-book-base: 0.5
+    # Anything bought from a villager / wandering trader (e.g. enchanted diamond armor) is tagged
+    # and worth $0 here — stops Hero of the Village / trading-hall money printing.
+    default-enchant-value-per-level: 0.25
+    # per level. Prot III + Unb III + Mending diamond piece = 1 + 3 + 1.5 + 2 = $7.50
+    enchant-values:
+      protection: 1
+      sharpness: 0.8
+      unbreaking: 0.5
+      mending: 2
+      efficiency: 0.4
+      fortune: 1
+      silk_touch: 1
+      looting: 1
+      power: 0.6
+      feather_falling: 0.4
+      fire_aspect: 0.5
+      knockback: 0.2
+      density: 0.4
+      breach: 0.6
+      wind_burst: 0.8
+
+messages:
+  prefix: "<dark_gray>[<gradient:#ff4e50:#f9d423><bold>World Events</bold></gradient><dark_gray>]</dark_gray> <gray>"
